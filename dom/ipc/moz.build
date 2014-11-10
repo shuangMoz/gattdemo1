@@ -104,8 +104,6 @@ LOCAL_INCLUDES += [
     '/chrome',
     '/docshell/base',
     '/dom/base',
-    '/dom/bluetooth',
-    '/dom/bluetooth/ipc',
     '/dom/devicestorage',
     '/dom/filesystem',
     '/dom/fmradio/ipc',
@@ -139,6 +137,17 @@ if CONFIG['MOZ_TOOLKIT_SEARCH']:
 for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
     if CONFIG[var]:
         DEFINES[var] = True
+
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth2',
+        '/dom/bluetooth2/ipc',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth',
+        '/dom/bluetooth/ipc',
+    ]
 
 JAR_MANIFESTS += ['jar.mn']
 

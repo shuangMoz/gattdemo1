@@ -43,7 +43,6 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/battery',
-    '/dom/bluetooth',
     '/dom/camera',
     '/dom/canvas',
     '/dom/geolocation',
@@ -87,6 +86,15 @@ include('/ipc/chromium/chromium-config.mozbuild')
 if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
     LOCAL_INCLUDES += [
         '/dom/system/gonk',
+    ]
+
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth2',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth',
     ]
 
 FINAL_LIBRARY = 'xul'

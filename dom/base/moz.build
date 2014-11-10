@@ -391,7 +391,6 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     '../battery',
-    '../bluetooth',
     '../events',
     '../media',
     '../network',
@@ -422,6 +421,15 @@ LOCAL_INCLUDES += [
     '/widget',
     '/xpcom/ds',
 ]
+
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    LOCAL_INCLUDES += [
+        '../bluetooth2',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '../bluetooth',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     LOCAL_INCLUDES += [
