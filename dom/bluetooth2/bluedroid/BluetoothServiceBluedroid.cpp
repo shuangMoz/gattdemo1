@@ -54,6 +54,15 @@
     }                                                                  \
   } while(0)
 
+#define ENSURE_GATT_MGR_IS_READY_VOID(gatt, runnable)                  \
+  do {                                                                 \
+    if (!gatt) {                                                       \
+      NS_NAMED_LITERAL_STRING(replyError, "GattManager is not ready"); \
+      DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError); \
+      return;                                                          \
+    }                                                                  \
+  } while(0)
+
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
@@ -1214,6 +1223,72 @@ BluetoothServiceBluedroid::IgnoreWaitingCall(BluetoothReplyRunnable* aRunnable)
 void
 BluetoothServiceBluedroid::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 {
+}
+
+//
+// GATT Client
+//
+
+void
+BluetoothServiceBluedroid::RegisterGattClientInternal(
+  const nsAString& aAppUuid, BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->RegisterClient(aAppUuid, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::UnregisterGattClientInternal(
+  int aClientIf, BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->UnregisterClient(aClientIf, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::ConnectGattClientInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  bool aIsDirect, BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->Connect(aClientIf, aDeviceAddress, aIsDirect, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::DisconnectGattClientInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->Disconnect(aClientIf, aDeviceAddress, aRunnable);
 }
 
 //

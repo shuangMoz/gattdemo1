@@ -28,6 +28,9 @@ interface BluetoothDevice : EventTarget
    */
   [NewObject, Throws]
   Promise<sequence<DOMString>>              fetchUuids();
+
+  [NewObject, Throws]
+  Promise<BluetoothGatt>                    connectGatt(boolean aAutoConnect);
 };
 
 enum BluetoothDeviceType

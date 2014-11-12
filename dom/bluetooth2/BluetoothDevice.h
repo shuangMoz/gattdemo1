@@ -23,6 +23,7 @@ namespace dom {
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothClassOfDevice;
+class BluetoothGatt;
 class BluetoothNamedValue;
 class BluetoothValue;
 class BluetoothSignal;
@@ -69,6 +70,11 @@ public:
     return mType;
   }
 
+  BluetoothGatt* Gatt() const
+  {
+    return mGatt;
+  }
+
   /****************************************************************************
    * Event Handlers
    ***************************************************************************/
@@ -78,7 +84,7 @@ public:
    * Methods (Web API Implementation)
    ***************************************************************************/
   already_AddRefed<Promise> FetchUuids(ErrorResult& aRv);
-
+  already_AddRefed<Promise> ConnectGatt(bool aAutoConnect, ErrorResult& aRv);
   /****************************************************************************
    * Others
    ***************************************************************************/
@@ -183,6 +189,8 @@ private:
    * Type of this device. Can be unknown/classic/le/dual.
    */
   BluetoothDeviceType mType;
+
+  nsRefPtr<BluetoothGatt> mGatt;
 };
 
 END_BLUETOOTH_NAMESPACE

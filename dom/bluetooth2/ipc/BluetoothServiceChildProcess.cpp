@@ -141,7 +141,7 @@ BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
 
 nsresult
 BluetoothServiceChildProcess::FetchUuidsInternal(
-    const nsAString& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
+  const nsAString& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, FetchUuidsRequest(nsString(aDeviceAddress)));
   return NS_OK;
@@ -377,6 +377,39 @@ BluetoothServiceChildProcess::SendPlayStatus(int64_t aDuration,
   SendRequest(aRunnable,
               SendPlayStatusRequest(aDuration, aPosition,
                                     nsString(aPlayStatus)));
+}
+
+void
+BluetoothServiceChildProcess::RegisterGattClientInternal(
+  const nsAString& aAppUuid, BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, RegisterGattClientRequest(nsString(aAppUuid)));
+}
+
+void
+BluetoothServiceChildProcess::UnregisterGattClientInternal(
+  int aClientIf, BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, UnregisterGattClientRequest(aClientIf));
+}
+
+void
+BluetoothServiceChildProcess::ConnectGattClientInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  bool aIsDirect, BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, ConnectGattClientRequest(aClientIf,
+                                                  nsString(aDeviceAddress),
+                                                  aIsDirect));
+}
+
+void
+BluetoothServiceChildProcess::DisconnectGattClientInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    DisconnectGattClientRequest(aClientIf, nsString(aDeviceAddress)));
 }
 
 nsresult

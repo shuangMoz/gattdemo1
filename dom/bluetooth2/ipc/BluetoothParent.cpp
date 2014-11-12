@@ -250,6 +250,14 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_SendMetaDataRequest());
     case Request::TSendPlayStatusRequest:
       return actor->DoRequest(aRequest.get_SendPlayStatusRequest());
+    case Request::TRegisterGattClientRequest:
+      return actor->DoRequest(aRequest.get_RegisterGattClientRequest());
+    case Request::TUnregisterGattClientRequest:
+      return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
+    case Request::TConnectGattClientRequest:
+      return actor->DoRequest(aRequest.get_ConnectGattClientRequest());
+    case Request::TDisconnectGattClientRequest:
+      return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -682,5 +690,56 @@ BluetoothRequestParent::DoRequest(const SendPlayStatusRequest& aRequest)
                            aRequest.position(),
                            aRequest.playStatus(),
                            mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const RegisterGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TRegisterGattClientRequest);
+
+  mService->RegisterGattClientInternal(aRequest.appUuid(),
+                                       mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const UnregisterGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TUnregisterGattClientRequest);
+
+  mService->UnregisterGattClientInternal(aRequest.clientIf(),
+                                         mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ConnectGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TConnectGattClientRequest);
+
+  mService->ConnectGattClientInternal(aRequest.clientIf(),
+                                      aRequest.deviceAddress(),
+                                      aRequest.isDirect(),
+                                      mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const DisconnectGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TDisconnectGattClientRequest);
+
+  mService->DisconnectGattClientInternal(aRequest.clientIf(),
+                                         aRequest.deviceAddress(),
+                                         mReplyRunnable.get());
+
   return true;
 }

@@ -6,6 +6,7 @@
 
 #include "BluetoothClassOfDevice.h"
 #include "BluetoothDevice.h"
+#include "BluetoothGatt.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
@@ -20,7 +21,10 @@ using namespace mozilla::dom;
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothDevice, DOMEventTargetHelper, mCod)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothDevice,
+                                   DOMEventTargetHelper,
+                                   mCod,
+                                   mGatt)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothDevice)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
@@ -54,6 +58,46 @@ public:
     JSContext* cx = jsapi.cx();
     if (!ToJSValue(cx, uuids, aValue)) {
       BT_WARNING("Cannot create JS array!");
+      JS_ClearPendingException(cx);
+      return false;
+    }
+
+    return true;
+  }
+
+  virtual void ReleaseMembers() MOZ_OVERRIDE
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mDevice = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothDevice> mDevice;
+};
+
+class ConnectGattTask MOZ_FINAL : public BluetoothReplyRunnable
+{
+public:
+  ConnectGattTask(Promise* aPromise,
+                  const nsAString& aName,
+                  BluetoothDevice* aDevice)
+  : BluetoothReplyRunnable(nullptr /* DOMRequest */, aPromise, aName)
+  , mDevice(aDevice)
+  {
+    MOZ_ASSERT(aPromise);
+    MOZ_ASSERT(aDevice);
+  }
+
+  bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
+  {
+    BT_LOGR();
+    aValue.setUndefined();
+
+    AutoJSAPI jsapi;
+    NS_ENSURE_TRUE(jsapi.Init(mDevice->GetParentObject()), false);
+    JSContext* cx = jsapi.cx();
+
+    if (!ToJSValue(cx, mDevice->Gatt(), aValue)) {
       JS_ClearPendingException(cx);
       return false;
     }
@@ -175,6 +219,29 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
 
   nsresult rv = bs->FetchUuidsInternal(mAddress, result);
   BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), NS_ERROR_DOM_OPERATION_ERR);
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
+BluetoothDevice::ConnectGatt(bool aAutoConnect, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new ConnectGattTask(promise,
+                        NS_LITERAL_STRING("ConnectGatt"),
+                        this);
+
+  mGatt = BluetoothGatt::Create(GetOwner(), aAutoConnect, mAddress, result);
+  BT_ENSURE_TRUE_REJECT(mGatt, NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
 }

@@ -306,6 +306,37 @@ public:
   SendInputMessage(const nsAString& aDeviceAddresses,
                    const nsAString& aMessage) = 0;
 
+  /**
+   * Register a gatt client. (platform specific implementation)
+   */
+  virtual void
+  RegisterGattClientInternal(const nsAString& aAppUuid,
+                             BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Unregister a gatt client. (platform specific implementation)
+   */
+  virtual void
+  UnregisterGattClientInternal(int aClientIf,
+                               BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Connect to a remote GATT server. (platform specific implementation)
+   */
+  virtual void
+  ConnectGattClientInternal(int aClientIf,
+                            const nsAString& aDeviceAddress,
+                            bool aIsDirect,
+                            BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Disconnect from a remote GATT server. (platform specific implementation)
+   */
+  virtual void
+  DisconnectGattClientInternal(int aClientIf,
+                               const nsAString& aDeviceAddress,
+                               BluetoothReplyRunnable* aRunnable) = 0;
+
   bool
   IsEnabled() const
   {

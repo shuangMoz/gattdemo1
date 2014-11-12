@@ -2817,8 +2817,8 @@ BluetoothDBusService::GetPairedDevicePropertiesInternal(
 }
 
 nsresult
-FetchUuidsInternal(const nsAString& aDeviceAddress,
-                   BluetoothReplyRunnable* aRunnable)
+BluetoothDBusService::FetchUuidsInternal(const nsAString& aDeviceAddress,
+                                         BluetoothReplyRunnable* aRunnable)
 {
   return NS_OK;
 }
@@ -4201,4 +4201,30 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
 
   Task* task = new UpdateNotificationTask(deviceAddress, aEventId, aData);
   DispatchToDBusThread(task);
+}
+
+void
+BluetoothDBusService::RegisterGattClientInternal(
+  const nsAString& aAppUuid, BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::UnregisterGattClientInternal(
+  int aClientIf, BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::ConnectGattClientInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  bool aIsDirect, BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::DisconnectGattClientInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
 }

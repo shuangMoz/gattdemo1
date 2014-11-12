@@ -216,6 +216,18 @@ protected:
 
   bool
   DoRequest(const SendPlayStatusRequest& aRequest);
+
+  bool
+  DoRequest(const RegisterGattClientRequest& aRequest);
+
+  bool
+  DoRequest(const UnregisterGattClientRequest& aRequest);
+
+  bool
+  DoRequest(const ConnectGattClientRequest& aRequest);
+
+  bool
+  DoRequest(const DisconnectGattClientRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE
