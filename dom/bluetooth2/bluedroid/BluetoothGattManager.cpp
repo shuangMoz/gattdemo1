@@ -78,10 +78,21 @@ GetClientIndex(const nsAString& aAppUuid)
 static int
 GetClientIndex(int aClientIf)
 {
-  MOZ_ASSERT(!aDeviceAddr.IsEmpty());
-
   for (uint8_t i = 0; i < sClients.Length(); i++) {
     if (aClientIf == sClients[i].mClientIf) {
+      return i;
+    }
+  }
+
+  BT_API2_LOGR("Cannot find the bluetooth client");
+  return -1;
+}
+
+static int
+GetClientIndexByConnId(int aConnId)
+{
+  for (uint8_t i = 0; i < sClients.Length(); i++) {
+    if (aConnId == sClients[i].mConnId) {
       return i;
     }
   }
@@ -473,6 +484,16 @@ BluetoothGattManager::ScanResultNotification(
   const BluetoothGattAdvData& aAdvData)
 { }
 
+class SearchServiceResultHandler MOZ_FINAL
+  : public BluetoothGattClientResultHandler
+{
+public:
+  void OnError(BluetoothStatus status) MOZ_FINAL
+  {
+    BT_API2_LOGR("SearchService Error");
+  }
+};
+
 void
 BluetoothGattManager::ConnectNotification(int aConnId,
                                           int aStatus,
@@ -521,6 +542,10 @@ BluetoothGattManager::ConnectNotification(int aConnId,
     sClients[clientIndex].mAppUuid,
     BluetoothValue(true)); // connected
   bs->DistributeSignal(signal);
+
+  // Retrieve all services
+  sBluetoothGattClientInterface->SearchService(
+    aConnId, BluetoothUuid(), new SearchServiceResultHandler());
 }
 
 void
@@ -563,12 +588,39 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
 
 void
 BluetoothGattManager::SearchCompleteNotification(int aConnId, int aStatus)
-{ }
+{
+  BT_API2_LOGR();
+  // notify gatt object
+}
 
 void
 BluetoothGattManager::SearchResultNotification(
   int aConnId, const BluetoothGattServiceId& aServiceId)
-{ }
+{
+  BT_API2_LOGR();
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  int clientIndex = GetClientIndexByConnId(aConnId);
+  NS_ENSURE_TRUE_VOID(clientIndex >= 0);
+
+  nsString uuidString;
+  UuidToString(aServiceId.mId.mUuid, uuidString);
+
+  BT_API2_LOGR("uuid = %s", NS_ConvertUTF16toUTF8(uuidString).get());
+  BT_API2_LOGR("instance id = %d", aServiceId.mId.mInstanceId);
+  BT_API2_LOGR("is_primary = %d", aServiceId.mIsPrimary);
+
+  InfallibleTArray<BluetoothNamedValue> values;
+  BT_APPEND_NAMED_VALUE(values, "UUID", uuidString);
+  BT_APPEND_NAMED_VALUE(values, "InstanceId", aServiceId.mId.mInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "IsPrimary", aServiceId.mIsPrimary);
+
+  // notify target BluetoothGatt object to create GattService
+  BluetoothSignal signal(NS_LITERAL_STRING("ServiceDiscovered"),
+                         sClients[clientIndex].mUuid, values);
+  bs->DistributeSignal(signal);
+}
 
 void
 BluetoothGattManager::GetCharacteristicNotification(
@@ -576,7 +628,9 @@ BluetoothGattManager::GetCharacteristicNotification(
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId,
   int aCharProperty)
-{ }
+{
+  // notify service object by uuid + instanceId
+}
 
 void
 BluetoothGattManager::GetDescriptorNotification(

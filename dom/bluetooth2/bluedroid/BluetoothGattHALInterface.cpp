@@ -625,11 +625,14 @@ BluetoothGattClientHALInterface::SearchService(
 #if ANDROID_VERSION >= 19
   bt_uuid_t uuid;
 
+  status = mInterface->search_service(aConnId, 0);
+/*
   if (NS_SUCCEEDED(Convert(aUuid, uuid))) {
     status = mInterface->search_service(aConnId, &uuid);
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
+*/
 #else
   status = BT_STATUS_UNSUPPORTED;
 #endif
