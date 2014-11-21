@@ -613,12 +613,12 @@ BluetoothGattManager::SearchResultNotification(
 
   InfallibleTArray<BluetoothNamedValue> values;
   BT_APPEND_NAMED_VALUE(values, "UUID", uuidString);
-  BT_APPEND_NAMED_VALUE(values, "InstanceId", aServiceId.mId.mInstanceId);
-  BT_APPEND_NAMED_VALUE(values, "IsPrimary", aServiceId.mIsPrimary);
+  BT_APPEND_NAMED_VALUE(values, "InstanceId", (uint32_t)aServiceId.mId.mInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "IsPrimary", (uint32_t)aServiceId.mIsPrimary);
 
   // notify target BluetoothGatt object to create GattService
   BluetoothSignal signal(NS_LITERAL_STRING("ServiceDiscovered"),
-                         sClients[clientIndex].mUuid, values);
+                         sClients[clientIndex].mAppUuid, values);
   bs->DistributeSignal(signal);
 }
 
