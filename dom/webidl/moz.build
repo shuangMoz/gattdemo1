@@ -625,6 +625,8 @@ if CONFIG['MOZ_B2G_BT']:
             'BluetoothDevice2.webidl',
             'BluetoothDiscoveryHandle.webidl',
             'BluetoothGatt.webidl',
+            'BluetoothGattCharacteristic.webidl',
+            'BluetoothGattService.webidl',
             'BluetoothManager2.webidl',
             'BluetoothPairingHandle.webidl',
             'BluetoothPairingListener.webidl',

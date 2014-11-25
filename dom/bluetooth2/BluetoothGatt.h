@@ -10,12 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BluetoothGattBinding.h"
+#include "mozilla/dom/bluetooth/BluetoothGattService.h"
 #include "BluetoothCommon.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
-  class Promise;
+class Promise;
 }
 }
 
@@ -40,6 +41,11 @@ public:
   BluetoothConnectionState ConnectionState() const
   {
     return mConnectionState;
+  }
+
+  void GetServices(nsTArray<nsRefPtr<BluetoothGattService>>& aServices) const
+  {
+    aServices = mServices;
   }
 
   /****************************************************************************
@@ -103,6 +109,9 @@ private:
    */
   void HandleClientRegistered(const BluetoothValue& aValue);
 
+  void HandleServiceDiscovered(const BluetoothValue& aValue);
+  void HandleSearchCompleted();
+
   /****************************************************************************
    * Variables
    ***************************************************************************/
@@ -134,6 +143,8 @@ private:
   nsString mDeviceAddr;
 
   nsRefPtr<BluetoothReplyRunnable> mConnectGattRunnable;
+
+  nsTArray<nsRefPtr<BluetoothGattService>> mServices;
 };
 
 END_BLUETOOTH_NAMESPACE

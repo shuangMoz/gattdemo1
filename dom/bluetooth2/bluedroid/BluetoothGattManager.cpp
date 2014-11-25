@@ -326,7 +326,7 @@ public:
     }
 
     if (mReply) {
-      DispatchBluetoothReply(mReply, BluetoothValue(), EmptyString());
+      DispatchBluetoothReply(mReply, BluetoothValue(true), EmptyString());
     }
   }
 
@@ -360,16 +360,11 @@ class ConnectResultHandler MOZ_FINAL
   : public BluetoothGattClientResultHandler
 {
 public:
-  ConnectResultHandler(BluetoothReplyRunnable* aReply)
-  : mReply(aReply)
-  { }
   void OnError(BluetoothStatus status) MOZ_FINAL
   {
     BT_API2_LOGR("Connect Gatt Client Error");
     // TODO: send disconnected signal and reply status error
   }
-private:
-  nsRefPtr<BluetoothReplyRunnable> mReply;
 };
 
 void
@@ -385,9 +380,8 @@ BluetoothGattManager::Connect(int aClientIf,
   ENSURE_GATT_CLIENT_IF_IS_READY_VOID(aRunnable);
 
   sConnectRunnableArray.AppendElement(aRunnable);
-
   sBluetoothGattClientInterface->Connect(
-    aClientIf, aDeviceAddr, aIsDirect, new ConnectResultHandler(aRunnable));
+    aClientIf, aDeviceAddr, aIsDirect, new ConnectResultHandler());
 }
 
 class DisconnectResultHandler MOZ_FINAL
@@ -532,7 +526,7 @@ BluetoothGattManager::ConnectNotification(int aConnId,
 
   if (!sConnectRunnableArray.IsEmpty()) {
     DispatchBluetoothReply(sConnectRunnableArray[0],
-                           BluetoothValue(),
+                           BluetoothValue(true),
                            EmptyString());
     sConnectRunnableArray.RemoveElementAt(0);
   }
@@ -580,7 +574,7 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
 
   if (!sDisconnectRunnableArray.IsEmpty()) {
     DispatchBluetoothReply(sDisconnectRunnableArray[0],
-                           BluetoothValue(),
+                           BluetoothValue(true),
                            EmptyString());
     sDisconnectRunnableArray.RemoveElementAt(0);
   }
@@ -590,7 +584,15 @@ void
 BluetoothGattManager::SearchCompleteNotification(int aConnId, int aStatus)
 {
   BT_API2_LOGR();
-  // notify gatt object
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  int clientIndex = GetClientIndexByConnId(aConnId);
+  NS_ENSURE_TRUE_VOID(clientIndex >= 0);
+
+  BluetoothSignal signal(NS_LITERAL_STRING("SearchCompleted"),
+                         sClients[clientIndex].mAppUuid, BluetoothValue());
+  bs->DistributeSignal(signal);
 }
 
 void

@@ -227,6 +227,25 @@ BluetoothGatt::HandleClientRegistered(const BluetoothValue& aValue)
 }
 
 void
+BluetoothGatt::HandleServiceDiscovered(const BluetoothValue& aValue)
+{
+  nsRefPtr<BluetoothGattService> service =
+    BluetoothGattService::Create(GetOwner(), aValue);
+
+  mServices.AppendElement(service);
+  // update cache later when search completed
+}
+
+void
+BluetoothGatt::HandleSearchCompleted()
+{
+  BT_API2_LOGR();
+  BluetoothGattBinding::ClearCachedServicesValue(this);
+
+  // get characteristic for every service
+}
+
+void
 BluetoothGatt::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -241,6 +260,10 @@ BluetoothGatt::Notify(const BluetoothSignal& aData)
       v.get_bool() ? BluetoothConnectionState::Connected
                    : BluetoothConnectionState::Disconnected;
     UpdateConnectionState(state);
+  } else if (aData.name().EqualsLiteral("ServiceDiscovered")) {
+    HandleServiceDiscovered(v);
+  } else if (aData.name().EqualsLiteral("SearchCompleted")) {
+    HandleSearchCompleted();
   } else {
     BT_WARNING("Not handling device signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());

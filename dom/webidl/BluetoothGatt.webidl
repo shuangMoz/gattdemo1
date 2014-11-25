@@ -8,7 +8,8 @@
 interface BluetoothGatt : EventTarget
 {
   readonly attribute BluetoothConnectionState       connectionState;
-
+  [Cached, Pure]
+  readonly attribute sequence<BluetoothGattService> services;
   // Fired when the connection state attribute changed
            attribute EventHandler                   onconnectionstatechanged;
 
