@@ -41,6 +41,23 @@ public:
                   const nsAString& aDeviceAddr,
                   BluetoothReplyRunnable* aRunnable);
 
+  void GetCharacteristic(int aConnId,
+                         const nsAString& aServiceUuid,
+                         int aServiceInstanceId,
+                         bool aIsPrimary,
+                         const nsAString& aCharacteristicUuid,
+                         int aCharacteristicInstanceId,
+                         BluetoothReplyRunnable* aRunnable);
+
+  void StartNotifications(int aClientIf,
+                          const nsAString& aDeviceAddr,
+                          const nsAString& aServiceUuid,
+                          int aServiceInstanceId,
+                          bool aIsPrimary,
+                          const nsAString& aCharacteristicUuid,
+                          int aCharacteristicInstanceId,
+                          BluetoothReplyRunnable* aRunnable);
+
 private:
   BluetoothGattManager();
 

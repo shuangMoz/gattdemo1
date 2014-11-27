@@ -5,12 +5,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothGattCharacteristic.h"
+#include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothGattCharacteristicBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/HoldDropJSObjects.h"
+
+#include "nsIGlobalObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -42,15 +46,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BluetoothGattCharacteristic)
 NS_INTERFACE_MAP_END
 
 BluetoothGattCharacteristic::BluetoothGattCharacteristic(
-  nsPIDOMWindow* aOwner, const nsAString& aUuid, int aInstanceId)
+  nsPIDOMWindow* aOwner, const nsAString& aUuid,
+  int aInstanceId, int aClientIf, const nsAString& aServiceUuid,
+  int aServiceInstanceId, bool aIsPrimary, const nsAString& aDeviceAddr)
   : mOwner(aOwner)
   , mUuid(aUuid)
   , mInstanceId(aInstanceId)
+  , mClientIf(aClientIf)
+  , mServiceUuid(aServiceUuid)
+  , mServiceInstanceId(aServiceInstanceId)
+  , mIsPrimary(aIsPrimary)
+  , mDeviceAddr(aDeviceAddr)
 {
   BT_API2_LOGR();
 
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(!mUuid.IsEmpty());
+  MOZ_ASSERT(!mServiceUuid.IsEmpty());
+  MOZ_ASSERT(!mDeviceAddr.IsEmpty());
 }
 
 BluetoothGattCharacteristic::~BluetoothGattCharacteristic()
@@ -60,15 +73,23 @@ BluetoothGattCharacteristic::~BluetoothGattCharacteristic()
 // static
 already_AddRefed<BluetoothGattCharacteristic>
 BluetoothGattCharacteristic::Create(nsPIDOMWindow* aWindow,
-                      const nsAString& aUuid,
-                      int aInstanceId)
+                                    const nsAString& aUuid,
+                                    int aInstanceId,
+                                    int aClientIf,
+                                    const nsAString& aServiceUuid,
+                                    int aServiceInstanceId,
+                                    bool aIsPrimary,
+                                    const nsAString& aDeviceAddr)
 {
   BT_API2_LOGR("BluetoothGattCharacteristic::Create");
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
   nsRefPtr<BluetoothGattCharacteristic> gattCharacteristic =
-    new BluetoothGattCharacteristic(aWindow, aUuid, aInstanceId);
+    new BluetoothGattCharacteristic(aWindow, aUuid, aInstanceId,
+                                    aClientIf, aServiceUuid,
+                                    aServiceInstanceId, aIsPrimary,
+                                    aDeviceAddr);
 
   return gattCharacteristic.forget();
 }
@@ -98,4 +119,33 @@ JSObject*
 BluetoothGattCharacteristic::WrapObject(JSContext* aContext)
 {
   return BluetoothGattCharacteristicBinding::Wrap(aContext, this);
+}
+
+already_AddRefed<Promise>
+BluetoothGattCharacteristic::StartNotifications(ErrorResult& aRv)
+{
+  BT_API2_LOGR();
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
+                                   promise,
+                                   NS_LITERAL_STRING("StartNotification"));
+
+  bs->StartNotificationsInternal(mClientIf, mDeviceAddr,
+                                 mServiceUuid, mServiceInstanceId, mIsPrimary,
+                                 mUuid, mInstanceId, result);
+
+  return promise.forget();
 }

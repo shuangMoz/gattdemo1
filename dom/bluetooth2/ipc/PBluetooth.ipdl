@@ -199,6 +199,27 @@ struct DisconnectGattClientRequest
   nsString deviceAddress;
 };
 
+struct GetCharacteristicRequest
+{
+  int connId;
+  nsString serviceUuid;
+  int serviceInstanceId;
+  bool isPrimary;
+  nsString characteristicUuid;
+  int characteristicInstanceId;
+};
+
+struct StartNotificationsRequest
+{
+  int clientIf;
+  nsString deviceAddr;
+  nsString serviceUuid;
+  int serviceInstanceId;
+  bool isPrimary;
+  nsString characteristicUuid;
+  int characteristicInstanceId;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -235,6 +256,8 @@ union Request
   UnregisterGattClientRequest;
   ConnectGattClientRequest;
   DisconnectGattClientRequest;
+  GetCharacteristicRequest;
+  StartNotificationsRequest;
 };
 
 protocol PBluetooth

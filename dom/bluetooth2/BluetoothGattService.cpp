@@ -29,11 +29,13 @@ NS_INTERFACE_MAP_END
 BluetoothGattService::BluetoothGattService(nsPIDOMWindow* aOwner,
                              bool aIsPrimary,
                              const nsAString& aUuid,
-                             int aInstanceId)
+                             int aInstanceId,
+                             int aConnId)
   : mOwner(aOwner)
   , mIsPrimary(aIsPrimary)
   , mUuid(aUuid)
   , mInstanceId(aInstanceId)
+  , mConnId(aConnId)
 {
   BT_API2_LOGR();
 
@@ -58,20 +60,22 @@ BluetoothGattService::Create(nsPIDOMWindow* aWindow,
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
 
-  MOZ_ASSERT(values.Length() == 3 && // uuid, instanceId, isPrimary
+  MOZ_ASSERT(values.Length() == 4 && // uuid, instanceId, isPrimary, connId
              values[0].value().type() == BluetoothValue::TnsString &&
              values[1].value().type() == BluetoothValue::Tuint32_t &&
-             values[2].value().type() == BluetoothValue::Tuint32_t);
+             values[2].value().type() == BluetoothValue::Tuint32_t &&
+             values[3].value().type() == BluetoothValue::Tuint32_t);
 
   nsString uuid = values[0].value().get_nsString();
   int instanceId = values[1].value().get_uint32_t();
   bool isPrimary = (bool)values[2].value().get_uint32_t();
+  int connId = values[3].value().get_uint32_t();
 
   BT_API2_LOGR("create service with uuid %s, instanceid %d, isPrimary %d",
                NS_ConvertUTF16toUTF8(uuid).get(), instanceId, isPrimary);
 
   nsRefPtr<BluetoothGattService> gattService =
-    new BluetoothGattService(aWindow, isPrimary, uuid, instanceId);
+    new BluetoothGattService(aWindow, isPrimary, uuid, instanceId, connId);
 
   return gattService.forget();
 }
@@ -80,4 +84,19 @@ JSObject*
 BluetoothGattService::WrapObject(JSContext* aContext)
 {
   return BluetoothGattServiceBinding::Wrap(aContext, this);
+}
+
+void
+BluetoothGattService::AppendCharacteristic(nsAString& aUuid,
+                                           int aInstanceId,
+                                           int aClientIf,
+                                           nsAString& aDeviceAddr)
+{
+  nsRefPtr<BluetoothGattCharacteristic> characteristic =
+    BluetoothGattCharacteristic::Create(
+      GetParentObject(), aUuid, aInstanceId, aClientIf,
+      mUuid, mInstanceId, mIsPrimary, aDeviceAddr);
+  NS_ENSURE_TRUE_VOID(characteristic);
+
+  mCharacteristics.AppendElement(characteristic);
 }

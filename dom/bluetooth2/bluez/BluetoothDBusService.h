@@ -203,6 +203,26 @@ public:
   DisconnectGattClientInternal(int aClientIf,
                                const nsAString& aDeviceAddress,
                                BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  GetCharacteristicInternal(int aConnId,
+                            const nsAString& aServiceUuid,
+                            int aServiceInstanceId,
+                            bool aIsPrimary,
+                            const nsAString& aCharacteristicUuid,
+                            int aCharacteristicInstanceId,
+                            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  StartNotificationsInternal(int aClientIf,
+                             const nsAString& aDeviceAddr,
+                             const nsAString& aServiceUuid,
+                             int aServiceInstanceId,
+                             bool aIsPrimary,
+                             const nsAString& aCharacteristicUuid,
+                             int aCharacteristicInstanceId,
+                             BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,

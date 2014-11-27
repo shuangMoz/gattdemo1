@@ -48,7 +48,7 @@ public:
                 ErrorResult& aRv) { }
 
   already_AddRefed<Promise>
-  StartNotifications(ErrorResult& aRv) { }
+  StartNotifications(ErrorResult& aRv);
 
   /****************************************************************************
    * Others
@@ -56,7 +56,12 @@ public:
   static already_AddRefed<BluetoothGattCharacteristic> Create(
     nsPIDOMWindow* aOwner,
     const nsAString& aUuid,
-    int aInstanceId);
+    int aInstanceId,
+    int aClientIf,
+    const nsAString& aServiceUuid,
+    int aServiceInstanceId,
+    bool aIsPrimary,
+    const nsAString& aDeviceAddr);
 
   nsPIDOMWindow* GetParentObject() const
   {
@@ -68,7 +73,12 @@ public:
 private:
   BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
                               const nsAString& aUuid,
-                              int aInstanceId);
+                              int aInstanceId,
+                              int aClientIf,
+                              const nsAString& aServiceUuid,
+                              int aServiceInstanceId,
+                              bool aIsPrimary,
+                              const nsAString& aDeviceAddr);
 
   ~BluetoothGattCharacteristic();
 
@@ -97,6 +107,12 @@ private:
 
   JS::Heap<JSObject*> mValue;
   bool mIsRooted;
+
+  int mClientIf;
+  nsString mDeviceAddr;
+  nsString mServiceUuid;
+  int mServiceInstanceId;
+  bool mIsPrimary;
 };
 
 END_BLUETOOTH_NAMESPACE

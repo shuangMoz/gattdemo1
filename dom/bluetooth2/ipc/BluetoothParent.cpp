@@ -258,6 +258,10 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_ConnectGattClientRequest());
     case Request::TDisconnectGattClientRequest:
       return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
+    case Request::TGetCharacteristicRequest:
+      return actor->DoRequest(aRequest.get_GetCharacteristicRequest());
+    case Request::TStartNotificationsRequest:
+      return actor->DoRequest(aRequest.get_StartNotificationsRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -740,6 +744,41 @@ BluetoothRequestParent::DoRequest(const DisconnectGattClientRequest& aRequest)
   mService->DisconnectGattClientInternal(aRequest.clientIf(),
                                          aRequest.deviceAddress(),
                                          mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const GetCharacteristicRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGetCharacteristicRequest);
+
+  mService->GetCharacteristicInternal(aRequest.connId(),
+                                      aRequest.serviceUuid(),
+                                      aRequest.serviceInstanceId(),
+                                      aRequest.isPrimary(),
+                                      aRequest.characteristicUuid(),
+                                      aRequest.characteristicInstanceId(),
+                                      mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const StartNotificationsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TStartNotificationsRequest);
+
+  mService->StartNotificationsInternal(aRequest.clientIf(),
+                                       aRequest.deviceAddr(),
+                                       aRequest.serviceUuid(),
+                                       aRequest.serviceInstanceId(),
+                                       aRequest.isPrimary(),
+                                       aRequest.characteristicUuid(),
+                                       aRequest.characteristicInstanceId(),
+                                       mReplyRunnable.get());
 
   return true;
 }

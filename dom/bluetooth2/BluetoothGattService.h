@@ -67,11 +67,22 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  int ConnId() const
+  {
+    return mConnId;
+  }
+
+  void AppendCharacteristic(nsAString& aUuid,
+                            int aInstanceId,
+                            int aClientIf,
+                            nsAString& aDeviceAddr);
+
 private:
   BluetoothGattService(nsPIDOMWindow* aOwner,
                        bool aIsPrimary,
                        const nsAString& aUuid,
-                       int aInstanceId);
+                       int aInstanceId,
+                       int aConnId);
 
   ~BluetoothGattService();
 
@@ -99,6 +110,8 @@ private:
    * Instance id of the gatt service.
    */
   int mInstanceId;
+
+  int mConnId;
 };
 
 END_BLUETOOTH_NAMESPACE

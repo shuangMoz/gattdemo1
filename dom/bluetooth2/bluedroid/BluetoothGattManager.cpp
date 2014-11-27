@@ -40,6 +40,7 @@ bool BluetoothGattManager::mInShutdown = false;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sRegisterClientRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sConnectRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sDisconnectRunnableArray;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sStartNotificationsRunnableArray;
 
 static nsTArray<BluetoothClient> sClients;
 
@@ -420,6 +421,98 @@ BluetoothGattManager::Disconnect(int aClientIf,
     new DisconnectResultHandler(aRunnable));
 }
 
+class GetCharacteristicResultHandler MOZ_FINAL
+  : public BluetoothGattClientResultHandler
+{
+public:
+  void OnError(BluetoothStatus status) MOZ_FINAL
+  {
+    BT_API2_LOGR("Get Characteristic Error");
+  }
+};
+
+void
+BluetoothGattManager::GetCharacteristic(int aConnId,
+                                        const nsAString& aServiceUuid,
+                                        int aServiceInstanceId,
+                                        bool aIsPrimary,
+                                        const nsAString& aCharacteristicUuid,
+                                        int aCharacteristicInstanceId,
+                                        BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_GATT_CLIENT_IF_IS_READY_VOID(aRunnable);
+
+  // build service id
+  BluetoothGattId gattId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aServiceUuid).get(), gattId.mUuid);
+  gattId.mInstanceId = aServiceInstanceId;
+
+  BluetoothGattServiceId serviceId;
+  memcpy(&serviceId.mId, &gattId, sizeof(BluetoothGattId));
+  //serviceId.mId = gattId;
+  serviceId.mIsPrimary = aIsPrimary;
+
+  // build characteristic
+  BluetoothGattId characteristicId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aCharacteristicUuid).get(),
+               characteristicId.mUuid);
+  characteristicId.mInstanceId = aCharacteristicInstanceId;
+
+  sBluetoothGattClientInterface->GetCharacteristic(
+    aConnId, serviceId, characteristicId,
+    new GetCharacteristicResultHandler());
+}
+
+class StartNotificationsResultHandler MOZ_FINAL
+  : public BluetoothGattClientResultHandler
+{
+public:
+  void OnError(BluetoothStatus status) MOZ_FINAL
+  {
+    BT_API2_LOGR("Start Notifications Error");
+  }
+};
+
+void
+BluetoothGattManager::StartNotifications(
+  int aClientIf, const nsAString& aDeviceAddr,
+  const nsAString& aServiceUuid, int aServiceInstanceId,
+  bool aIsPrimary, const nsAString& aCharacteristicUuid,
+  int aCharacteristicInstanceId, BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR("clientIf = %d, addr = %s, serviceUuid = %s, charUuid = %s",
+    aClientIf, NS_ConvertUTF16toUTF8(aDeviceAddr).get(),
+    NS_ConvertUTF16toUTF8(aServiceUuid).get(),
+    NS_ConvertUTF16toUTF8(aCharacteristicUuid).get());
+
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_GATT_CLIENT_IF_IS_READY_VOID(aRunnable);
+
+  // build service id
+  BluetoothGattId gattId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aServiceUuid).get(), gattId.mUuid);
+  gattId.mInstanceId = aServiceInstanceId;
+
+  BluetoothGattServiceId serviceId;
+  memcpy(&serviceId.mId, &gattId, sizeof(BluetoothGattId));
+  serviceId.mIsPrimary = aIsPrimary;
+
+  // build characteristic
+  BluetoothGattId characteristicId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aCharacteristicUuid).get(),
+               characteristicId.mUuid);
+  characteristicId.mInstanceId = aCharacteristicInstanceId;
+
+  sStartNotificationsRunnableArray.AppendElement(aRunnable);
+
+  sBluetoothGattClientInterface->RegisterNotification(
+    aClientIf, aDeviceAddr, serviceId, characteristicId,
+    new StartNotificationsResultHandler());
+}
+
 //
 // Notification Handlers
 //
@@ -548,6 +641,7 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
                                              int aClientIf,
                                              const nsAString& aDeviceAddr)
 {
+  BT_API2_LOGR("connId %d is disconnected");
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothService* bs = BluetoothService::Get();
@@ -578,6 +672,9 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
                            EmptyString());
     sDisconnectRunnableArray.RemoveElementAt(0);
   }
+
+  // unregister app
+  UnregisterClient(aClientIf, nullptr);
 }
 
 void
@@ -591,7 +688,7 @@ BluetoothGattManager::SearchCompleteNotification(int aConnId, int aStatus)
   NS_ENSURE_TRUE_VOID(clientIndex >= 0);
 
   BluetoothSignal signal(NS_LITERAL_STRING("SearchCompleted"),
-                         sClients[clientIndex].mAppUuid, BluetoothValue());
+                         sClients[clientIndex].mAppUuid, BluetoothValue(true));
   bs->DistributeSignal(signal);
 }
 
@@ -617,6 +714,7 @@ BluetoothGattManager::SearchResultNotification(
   BT_APPEND_NAMED_VALUE(values, "UUID", uuidString);
   BT_APPEND_NAMED_VALUE(values, "InstanceId", (uint32_t)aServiceId.mId.mInstanceId);
   BT_APPEND_NAMED_VALUE(values, "IsPrimary", (uint32_t)aServiceId.mIsPrimary);
+  BT_APPEND_NAMED_VALUE(values, "ConnId", (uint32_t)aConnId);
 
   // notify target BluetoothGatt object to create GattService
   BluetoothSignal signal(NS_LITERAL_STRING("ServiceDiscovered"),
@@ -631,7 +729,34 @@ BluetoothGattManager::GetCharacteristicNotification(
   const BluetoothGattId& aCharId,
   int aCharProperty)
 {
-  // notify service object by uuid + instanceId
+  BT_API2_LOGR();
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  int clientIndex = GetClientIndexByConnId(aConnId);
+  NS_ENSURE_TRUE_VOID(clientIndex >= 0);
+
+  nsString serviceUuid;
+  UuidToString(aServiceId.mId.mUuid, serviceUuid);
+
+  BT_API2_LOGR("uuid = %s", NS_ConvertUTF16toUTF8(serviceUuid).get());
+  BT_API2_LOGR("instance id = %d", aServiceId.mId.mInstanceId);
+
+  nsString charUuid;
+  UuidToString(aCharId.mUuid, charUuid);
+  BT_API2_LOGR("char uuid = %s", NS_ConvertUTF16toUTF8(charUuid).get());
+
+  InfallibleTArray<BluetoothNamedValue> values;
+  BT_APPEND_NAMED_VALUE(values, "serviceUuid", serviceUuid);
+  BT_APPEND_NAMED_VALUE(values, "serviceInstanceId",
+                        (uint32_t)aServiceId.mId.mInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "charUuid", charUuid);
+  BT_APPEND_NAMED_VALUE(values, "charInstanceId",
+                        (uint32_t)aCharId.mInstanceId);
+
+  BluetoothSignal signal(NS_LITERAL_STRING("GetCharacteristic"),
+                         sClients[clientIndex].mAppUuid, values);
+  bs->DistributeSignal(signal);
 }
 
 void
@@ -654,12 +779,41 @@ BluetoothGattManager::RegisterNotificationNotification(
   int aConnId, int aIsRegister, int aStatus,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId)
-{ }
+{
+  BT_API2_LOGR("status = %d, connId = %d", aStatus, aConnId);
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  // int clientIndex = GetClientIndexByConnId(aConnId);
+
+  // if (aStatus != 0 || clientIndex < 0) {
+  if (aStatus != 0) {
+    if (!sStartNotificationsRunnableArray.IsEmpty()) {
+      NS_NAMED_LITERAL_STRING(errorStr, "Register Notification failed");
+      DispatchBluetoothReply(sStartNotificationsRunnableArray[0],
+                             BluetoothValue(),
+                             errorStr);
+      sStartNotificationsRunnableArray.RemoveElementAt(0);
+    }
+    return;
+  }
+
+  if (!sStartNotificationsRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sStartNotificationsRunnableArray[0],
+                           BluetoothValue(true),
+                           EmptyString());
+  }
+}
 
 void
 BluetoothGattManager::NotifyNotification(
   int aConnId, const BluetoothGattNotifyParam& aNotifyParam)
-{ }
+{
+  BT_API2_LOGR("connId = %d", aConnId);
+}
 
 void
 BluetoothGattManager::ReadCharacteristicNotification(

@@ -1291,6 +1291,47 @@ BluetoothServiceBluedroid::DisconnectGattClientInternal(
   gatt->Disconnect(aClientIf, aDeviceAddress, aRunnable);
 }
 
+void
+BluetoothServiceBluedroid::GetCharacteristicInternal(
+  int aConnId, const nsAString& aServiceUuid,
+  int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->GetCharacteristic(
+    aConnId, aServiceUuid, aServiceInstanceId, aIsPrimary,
+    aCharacteristicUuid, aCharacteristicInstanceId, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::StartNotificationsInternal(
+  int aClientIf, const nsAString& aDeviceAddr,
+  const nsAString& aServiceUuid, int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->StartNotifications(
+    aClientIf, aDeviceAddr, aServiceUuid,
+    aServiceInstanceId, aIsPrimary, aCharacteristicUuid,
+    aCharacteristicInstanceId, aRunnable);
+}
+
 //
 // Bluetooth notifications
 //

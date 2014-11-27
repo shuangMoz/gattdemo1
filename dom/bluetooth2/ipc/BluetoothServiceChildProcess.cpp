@@ -412,6 +412,34 @@ BluetoothServiceChildProcess::DisconnectGattClientInternal(
     DisconnectGattClientRequest(aClientIf, nsString(aDeviceAddress)));
 }
 
+void
+BluetoothServiceChildProcess::GetCharacteristicInternal(
+  int aConnId, const nsAString& aServiceUuid,
+  int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GetCharacteristicRequest(aConnId, nsString(aServiceUuid),
+                             aServiceInstanceId, aIsPrimary,
+                             nsString(aCharacteristicUuid),
+                             aCharacteristicInstanceId));
+}
+
+void
+BluetoothServiceChildProcess::StartNotificationsInternal(
+  int aClientIf, const nsAString& aDeviceAddr,
+  const nsAString& aServiceUuid, int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    StartNotificationsRequest(
+      aClientIf, nsString(aDeviceAddr),
+      nsString(aServiceUuid), aServiceInstanceId, aIsPrimary,
+      nsString(aCharacteristicUuid),aCharacteristicInstanceId));
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {

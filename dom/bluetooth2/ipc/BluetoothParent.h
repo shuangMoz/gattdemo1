@@ -228,6 +228,12 @@ protected:
 
   bool
   DoRequest(const DisconnectGattClientRequest& aRequest);
+
+  bool
+  DoRequest(const GetCharacteristicRequest& aRequest);
+
+  bool
+  DoRequest(const StartNotificationsRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE

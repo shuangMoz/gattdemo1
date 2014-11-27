@@ -192,6 +192,33 @@ BluetoothGatt::Disconnect(ErrorResult& aRv)
   return promise.forget();
 }
 
+/*
+already_AddRefed<Promise>
+BluetoothGatt::Close(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  UpdateConnectionState(BluetoothConnectionState::Disconnected);
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(nullptr  //DOMRequest ,
+                                   promise,
+                                   NS_LITERAL_STRING("CloseGattClient"));
+  bs->UnregisterGattClientInternal(mClientIf, mDeviceAddr, result);
+
+  return promise.forget();
+}
+*/
+
 void
 BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
 {
@@ -233,7 +260,7 @@ BluetoothGatt::HandleServiceDiscovered(const BluetoothValue& aValue)
     BluetoothGattService::Create(GetOwner(), aValue);
 
   mServices.AppendElement(service);
-  // update cache later when search completed
+  // Cache will be updated later while search completed
 }
 
 void
@@ -242,7 +269,54 @@ BluetoothGatt::HandleSearchCompleted()
   BT_API2_LOGR();
   BluetoothGattBinding::ClearCachedServicesValue(this);
 
-  // get characteristic for every service
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  // get the first characteristic for every service
+  // TODO: get every characteristic
+
+  for (uint32_t i = 0; i < mServices.Length(); i++) {
+    nsString uuid;
+    mServices[i]->GetUuid(uuid);
+    bs->GetCharacteristicInternal(mServices[i]->ConnId(),
+                                  uuid,
+                                  mServices[i]->InstanceId(),
+                                  mServices[i]->IsPrimary(),
+                                  EmptyString(), 0,
+                                  new BluetoothVoidReplyRunnable(nullptr));
+  }
+}
+
+void
+BluetoothGatt::HandleGetCharacteristic(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& values =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(values.Length() == 4 &&
+             values[0].value().type() == BluetoothValue::TnsString &&
+             values[1].value().type() == BluetoothValue::Tuint32_t &&
+             values[2].value().type() == BluetoothValue::TnsString &&
+             values[3].value().type() == BluetoothValue::Tuint32_t);
+
+  nsString serviceUuid = values[0].value().get_nsString();
+  int serviceInstanceId = values[1].value().get_uint32_t();
+  nsString charUuid = values[2].value().get_nsString();
+  int charInstanceId = values[3].value().get_uint32_t();
+
+  for (uint32_t i = 0; i < mServices.Length(); i++) {
+    nsString uuid;
+    mServices[i]->GetUuid(uuid);
+
+    if (uuid.Equals(serviceUuid) &&
+        mServices[i]->InstanceId() == serviceInstanceId) {
+      mServices[i]->AppendCharacteristic(
+        charUuid, charInstanceId, mClientIf, mDeviceAddr);
+      break;
+    }
+  }
 }
 
 void
@@ -264,6 +338,8 @@ BluetoothGatt::Notify(const BluetoothSignal& aData)
     HandleServiceDiscovered(v);
   } else if (aData.name().EqualsLiteral("SearchCompleted")) {
     HandleSearchCompleted();
+  } else if (aData.name().EqualsLiteral("GetCharacteristic")) {
+    HandleGetCharacteristic(v);
   } else {
     BT_WARNING("Not handling device signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());

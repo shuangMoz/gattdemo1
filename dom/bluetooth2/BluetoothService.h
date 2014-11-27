@@ -337,6 +337,31 @@ public:
                                const nsAString& aDeviceAddress,
                                BluetoothReplyRunnable* aRunnable) = 0;
 
+  /**
+   * Get a characteristic of a gatt service.
+   */
+  virtual void
+  GetCharacteristicInternal(int aConnId,
+                            const nsAString& aServiceUuid,
+                            int aServiceInstanceId,
+                            bool aIsPrimary,
+                            const nsAString& aCharacteristicUuid,
+                            int aCharacteristicInstanceId,
+                            BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Enable notifications of a characteristic.
+   */
+  virtual void
+  StartNotificationsInternal(int aClientIf,
+                             const nsAString& aDeviceAddr,
+                             const nsAString& aServiceUuid,
+                             int aServiceInstanceId,
+                             bool aIsPrimary,
+                             const nsAString& aCharacteristicUuid,
+                             int aCharacteristicInstanceId,
+                             BluetoothReplyRunnable* aRunnable) = 0;
+
   bool
   IsEnabled() const
   {

@@ -111,6 +111,7 @@ private:
 
   void HandleServiceDiscovered(const BluetoothValue& aValue);
   void HandleSearchCompleted();
+  void HandleGetCharacteristic(const BluetoothValue& aValue);
 
   /****************************************************************************
    * Variables

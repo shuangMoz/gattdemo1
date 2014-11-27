@@ -261,6 +261,7 @@ struct BluetoothGattClientCallback
                     btgatt_gatt_id_t* aCharId,
                     int aCharProperty)
   {
+    BT_API2_LOGR("getchar cb");
     GetCharacteristicNotification::Dispatch(
       &BluetoothGattClientNotificationHandler::GetCharacteristicNotification,
       aConnId, aStatus, *aServiceId, *aCharId, aCharProperty);
@@ -292,6 +293,7 @@ struct BluetoothGattClientCallback
                        btgatt_srvc_id_t* aServiceId,
                        btgatt_gatt_id_t* aCharId)
   {
+    BT_API2_LOGR("HAL connId: %d", aConnId);
     RegisterNotificationNotification::Dispatch(
       &BluetoothGattClientNotificationHandler::RegisterNotificationNotification,
       aConnId, aIsRegister, aStatus, *aServiceId, *aCharId);
@@ -684,12 +686,19 @@ BluetoothGattClientHALInterface::GetCharacteristic(
   btgatt_srvc_id_t serviceId;
   btgatt_gatt_id_t startCharId;
 
+  if (NS_SUCCEEDED(Convert(aServiceId, serviceId))) {
+    status = mInterface->get_characteristic(aConnId, &serviceId, 0);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+/*
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
       NS_SUCCEEDED(Convert(aStartCharId, startCharId))) {
     status = mInterface->get_characteristic(aConnId, &serviceId, &startCharId);
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
+*/
 #else
   status = BT_STATUS_UNSUPPORTED;
 #endif
