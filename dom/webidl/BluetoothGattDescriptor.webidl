@@ -5,15 +5,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [CheckPermissions="bluetooth"]
-interface BluetoothGattCharacteristic
+interface BluetoothGattDescriptor
 {
   readonly attribute DOMString            uuid;
   readonly attribute unsigned short       instanceId;
   [Throws]
   readonly attribute ArrayBuffer?         value;
-  [Cached, Pure]
-  readonly attribute sequence<BluetoothGattDescriptor> descriptors;
 
   [NewObject, Throws]
-  Promise<void> startNotifications();
+  Promise<void> writeValue(ArrayBuffer value);
 };

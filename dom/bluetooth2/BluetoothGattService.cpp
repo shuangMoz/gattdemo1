@@ -100,3 +100,21 @@ BluetoothGattService::AppendCharacteristic(nsAString& aUuid,
 
   mCharacteristics.AppendElement(characteristic);
 }
+
+already_AddRefed<BluetoothGattCharacteristic>
+BluetoothGattService::FindCharacteristic(const nsAString& aUuid,
+                                         int aInstanceId)
+{
+  for (uint32_t i = 0; i < mCharacteristics.Length(); i++) {
+    nsString uuid;
+    mCharacteristics[i]->GetUuid(uuid);
+
+    if (uuid.Equals(aUuid) &&
+        mCharacteristics[i]->InstanceId() == aInstanceId) {
+      nsRefPtr<BluetoothGattCharacteristic> characteristic =
+        mCharacteristics[i];
+      return characteristic.forget();
+    }
+  }
+  return nullptr;
+}

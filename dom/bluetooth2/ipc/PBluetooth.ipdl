@@ -209,6 +209,18 @@ struct GetCharacteristicRequest
   int characteristicInstanceId;
 };
 
+struct GetDescriptorRequest
+{
+  int connId;
+  nsString serviceUuid;
+  int serviceInstanceId;
+  bool isPrimary;
+  nsString characteristicUuid;
+  int characteristicInstanceId;
+  nsString descriptorUuid;
+  int descriptorInstanceId;
+};
+
 struct StartNotificationsRequest
 {
   int clientIf;
@@ -257,6 +269,7 @@ union Request
   ConnectGattClientRequest;
   DisconnectGattClientRequest;
   GetCharacteristicRequest;
+  GetDescriptorRequest;
   StartNotificationsRequest;
 };
 

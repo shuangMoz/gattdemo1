@@ -4239,6 +4239,16 @@ BluetoothDBusService::GetCharacteristicInternal(
 }
 
 void
+BluetoothDBusService::GetDescriptorInternal(
+  int aConnId, const nsAString& aServiceUuid,
+  int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  const nsAString& aDescriptorUuid, int aDescriptorInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
 BluetoothDBusService::StartNotificationsInternal(
   int aClientIf, const nsAString& aDeviceAddr,
   const nsAString& aServiceUuid, int aServiceInstanceId, bool aIsPrimary,

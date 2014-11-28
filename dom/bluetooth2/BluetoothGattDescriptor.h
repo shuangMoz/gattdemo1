@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_bluetoothgattcharacteristic_h__
-#define mozilla_dom_bluetooth_bluetoothgattcharacteristic_h__
+#ifndef mozilla_dom_bluetooth_bluetoothgattdescriptor_h__
+#define mozilla_dom_bluetooth_bluetoothgattdescriptor_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/TypedArray.h"
 #include "BluetoothCommon.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/bluetooth/BluetoothGattDescriptor.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -23,12 +23,12 @@ class Promise;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothGattCharacteristic MOZ_FINAL : public nsISupports,
-                                              public nsWrapperCache
+class BluetoothGattDescriptor MOZ_FINAL : public nsISupports,
+                                          public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothGattCharacteristic)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothGattDescriptor)
 
   /****************************************************************************
    * Attribute Getters
@@ -48,27 +48,23 @@ public:
                 JS::MutableHandle<JSObject*> aValue,
                 ErrorResult& aRv) { }
 
-  void GetDescriptors(
-    nsTArray<nsRefPtr<BluetoothGattDescriptor>>& aDescriptors) const
-  {
-    aDescriptors = mDescriptors;
-  }
-
   already_AddRefed<Promise>
-  StartNotifications(ErrorResult& aRv);
+
+  WriteValue(const ArrayBuffer& aValue, ErrorResult& aRv);
 
   /****************************************************************************
    * Others
    ***************************************************************************/
-  static already_AddRefed<BluetoothGattCharacteristic> Create(
+  static already_AddRefed<BluetoothGattDescriptor> Create(
     nsPIDOMWindow* aOwner,
     const nsAString& aUuid,
     int aInstanceId,
-    int aClientIf,
+    int aConnId,
     const nsAString& aServiceUuid,
     int aServiceInstanceId,
     bool aIsPrimary,
-    const nsAString& aDeviceAddr);
+    const nsAString& aCharUuid,
+    int aCharInstanceId);
 
   nsPIDOMWindow* GetParentObject() const
   {
@@ -77,21 +73,18 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  void AppendDescriptor(const nsAString& aUuid,
-                        int aInstanceId,
-                        int aConnId);
-
 private:
-  BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
-                              const nsAString& aUuid,
-                              int aInstanceId,
-                              int aClientIf,
-                              const nsAString& aServiceUuid,
-                              int aServiceInstanceId,
-                              bool aIsPrimary,
-                              const nsAString& aDeviceAddr);
+  BluetoothGattDescriptor(nsPIDOMWindow* aOwner,
+                          const nsAString& aUuid,
+                          int aInstanceId,
+                          int aConnId,
+                          const nsAString& aServiceUuid,
+                          int aServiceInstanceId,
+                          bool aIsPrimary,
+                          const nsAString& aCharUuid,
+                          int aCharInstanceId);
 
-  ~BluetoothGattCharacteristic();
+  ~BluetoothGattDescriptor();
 
   void Root();
   void Unroot();
@@ -102,29 +95,29 @@ private:
   nsCOMPtr<nsPIDOMWindow> mOwner;
 
   /**
-   * UUID of this gatt characteristic.
+   * UUID of this gatt descriptor.
    */
   nsString mUuid;
 
   /**
-   * Instance id of the gatt characteristic.
+   * Instance id of the gatt descriptor.
    */
   int mInstanceId;
 
   /**
-   * Raw value of this characteristic.
+   * Raw value of this descriptor.
    */
   nsTArray<uint8_t> mRawValue;
 
-  nsTArray<nsRefPtr<BluetoothGattDescriptor>> mDescriptors;
   JS::Heap<JSObject*> mValue;
   bool mIsRooted;
 
-  int mClientIf;
-  nsString mDeviceAddr;
+  int mConnId;
   nsString mServiceUuid;
   int mServiceInstanceId;
   bool mIsPrimary;
+  nsString mCharUuid;
+  int mCharInstanceId;
 };
 
 END_BLUETOOTH_NAMESPACE

@@ -314,7 +314,58 @@ BluetoothGatt::HandleGetCharacteristic(const BluetoothValue& aValue)
         mServices[i]->InstanceId() == serviceInstanceId) {
       mServices[i]->AppendCharacteristic(
         charUuid, charInstanceId, mClientIf, mDeviceAddr);
+
+      BluetoothService* bs = BluetoothService::Get();
+      NS_ENSURE_TRUE_VOID(bs);
+
+      bs->GetDescriptorInternal(mServices[i]->ConnId(),
+                                uuid, serviceInstanceId,
+                                mServices[i]->IsPrimary(),
+                                charUuid, charInstanceId,
+                                EmptyString(), 0,
+                                new BluetoothVoidReplyRunnable(nullptr));
+      // TODO: get every descriptors (after demo)
       break;
+    }
+  }
+}
+
+void
+BluetoothGatt::HandleGetDescriptor(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& values =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(values.Length() == 6 &&
+             values[0].value().type() == BluetoothValue::TnsString &&
+             values[1].value().type() == BluetoothValue::Tuint32_t &&
+             values[2].value().type() == BluetoothValue::TnsString &&
+             values[3].value().type() == BluetoothValue::Tuint32_t &&
+             values[4].value().type() == BluetoothValue::TnsString &&
+             values[5].value().type() == BluetoothValue::Tuint32_t);
+
+  nsString serviceUuid = values[0].value().get_nsString();
+  int serviceInstanceId = values[1].value().get_uint32_t();
+  nsString charUuid = values[2].value().get_nsString();
+  int charInstanceId = values[3].value().get_uint32_t();
+  nsString descUuid = values[4].value().get_nsString();
+  int descInstanceId = values[5].value().get_uint32_t();
+
+  for (uint32_t i = 0; i < mServices.Length(); i++) {
+    nsString uuid;
+    mServices[i]->GetUuid(uuid);
+
+    if (uuid.Equals(serviceUuid) &&
+        mServices[i]->InstanceId() == serviceInstanceId) {
+      nsRefPtr<BluetoothGattCharacteristic> characteristic
+        = mServices[i]->FindCharacteristic(charUuid, charInstanceId);
+      NS_ENSURE_TRUE_VOID(characteristic);
+
+      characteristic->AppendDescriptor(descUuid,
+                                       descInstanceId,
+                                       mServices[i]->ConnId());
     }
   }
 }
@@ -365,6 +416,8 @@ BluetoothGatt::Notify(const BluetoothSignal& aData)
     HandleSearchCompleted();
   } else if (aData.name().EqualsLiteral("GetCharacteristic")) {
     HandleGetCharacteristic(v);
+  } else if (aData.name().EqualsLiteral("GetDescriptor")) {
+    HandleGetDescriptor(v);
   } else if (aData.name().EqualsLiteral("CharacteristicChanged")) {
     HandleCharacteristicChanged(v);
   } else {

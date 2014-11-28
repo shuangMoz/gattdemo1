@@ -30,6 +30,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BluetoothGattCharacteristic)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDescriptors)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -148,4 +149,20 @@ BluetoothGattCharacteristic::StartNotifications(ErrorResult& aRv)
                                  mUuid, mInstanceId, result);
 
   return promise.forget();
+}
+
+void
+BluetoothGattCharacteristic::AppendDescriptor(const nsAString& aUuid,
+                                              int aInstanceId,
+                                              int aConnId)
+{
+  nsRefPtr<BluetoothGattDescriptor> descriptor =
+    BluetoothGattDescriptor::Create(
+      GetParentObject(), aUuid, aInstanceId, aConnId,
+      mServiceUuid, mServiceInstanceId, mIsPrimary,
+      mUuid, mInstanceId // characteristic id
+      );
+  NS_ENSURE_TRUE_VOID(descriptor);
+
+  mDescriptors.AppendElement(descriptor);
 }

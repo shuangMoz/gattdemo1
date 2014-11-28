@@ -233,6 +233,9 @@ protected:
   DoRequest(const GetCharacteristicRequest& aRequest);
 
   bool
+  DoRequest(const GetDescriptorRequest& aRequest);
+
+  bool
   DoRequest(const StartNotificationsRequest& aRequest);
 };
 

@@ -77,6 +77,12 @@ public:
                             int aClientIf,
                             nsAString& aDeviceAddr);
 
+  /**
+   * A helper function to find existing characteristics.
+   */
+  already_AddRefed<BluetoothGattCharacteristic>
+  FindCharacteristic(const nsAString& aUuid, int aInstanceId);
+
 private:
   BluetoothGattService(nsPIDOMWindow* aOwner,
                        bool aIsPrimary,

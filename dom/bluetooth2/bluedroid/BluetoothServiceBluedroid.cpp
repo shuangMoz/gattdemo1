@@ -1312,6 +1312,27 @@ BluetoothServiceBluedroid::GetCharacteristicInternal(
 }
 
 void
+BluetoothServiceBluedroid::GetDescriptorInternal(
+  int aConnId, const nsAString& aServiceUuid,
+  int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  const nsAString& aDescriptorUuid, int aDescriptorInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->GetDescriptor(
+    aConnId, aServiceUuid, aServiceInstanceId, aIsPrimary,
+    aCharacteristicUuid, aCharacteristicInstanceId,
+    aDescriptorUuid, aDescriptorInstanceId, aRunnable);
+}
+void
 BluetoothServiceBluedroid::StartNotificationsInternal(
   int aClientIf, const nsAString& aDeviceAddr,
   const nsAString& aServiceUuid, int aServiceInstanceId, bool aIsPrimary,

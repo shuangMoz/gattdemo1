@@ -350,6 +350,20 @@ public:
                             BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
+   * Get a descriptor of a gatt characteristic.
+   */
+  virtual void
+  GetDescriptorInternal(int aConnId,
+                        const nsAString& aServiceUuid,
+                        int aServiceInstanceId,
+                        bool aIsPrimary,
+                        const nsAString& aCharacteristicUuid,
+                        int aCharacteristicInstanceId,
+                        const nsAString& aDescriptorUuid,
+                        int aDescriptorInstanceId,
+                        BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
    * Enable notifications of a characteristic.
    */
   virtual void

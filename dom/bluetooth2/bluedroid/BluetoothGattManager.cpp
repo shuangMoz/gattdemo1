@@ -462,6 +462,59 @@ BluetoothGattManager::GetCharacteristic(int aConnId,
     new GetCharacteristicResultHandler());
 }
 
+class GetDescriptorResultHandler MOZ_FINAL
+  : public BluetoothGattClientResultHandler
+{
+public:
+  void OnError(BluetoothStatus status) MOZ_FINAL
+  {
+    BT_API2_LOGR("Get Descriptor Error");
+  }
+};
+
+void
+BluetoothGattManager::GetDescriptor(int aConnId,
+                                    const nsAString& aServiceUuid,
+                                    int aServiceInstanceId,
+                                    bool aIsPrimary,
+                                    const nsAString& aCharacteristicUuid,
+                                    int aCharacteristicInstanceId,
+                                    const nsAString& aDescriptorUuid,
+                                    int aDescriptorInstanceId,
+                                    BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_GATT_CLIENT_IF_IS_READY_VOID(aRunnable);
+
+  // build service id
+  BluetoothGattId gattId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aServiceUuid).get(), gattId.mUuid);
+  gattId.mInstanceId = aServiceInstanceId;
+
+  BluetoothGattServiceId serviceId;
+  memcpy(&serviceId.mId, &gattId, sizeof(BluetoothGattId));
+  //serviceId.mId = gattId;
+  serviceId.mIsPrimary = aIsPrimary;
+
+  // build characteristic
+  BluetoothGattId characteristicId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aCharacteristicUuid).get(),
+               characteristicId.mUuid);
+  characteristicId.mInstanceId = aCharacteristicInstanceId;
+
+  // build descriptor
+  BluetoothGattId descriptorId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aDescriptorUuid).get(),
+               descriptorId.mUuid);
+  descriptorId.mInstanceId = aDescriptorInstanceId;
+
+  sBluetoothGattClientInterface->GetDescriptor(
+    aConnId, serviceId, characteristicId, descriptorId,
+    new GetDescriptorResultHandler());
+}
+
 class StartNotificationsResultHandler MOZ_FINAL
   : public BluetoothGattClientResultHandler
 {
@@ -761,7 +814,43 @@ BluetoothGattManager::GetDescriptorNotification(
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId,
   const BluetoothGattId& aDescriptorId)
-{ }
+{
+  BT_API2_LOGR("connId = %d, aStatus = %d", aConnId, aStatus);
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  int clientIndex = GetClientIndexByConnId(aConnId);
+  NS_ENSURE_TRUE_VOID(clientIndex >= 0);
+
+  nsString serviceUuid;
+  UuidToString(aServiceId.mId.mUuid, serviceUuid);
+
+  BT_API2_LOGR("uuid = %s", NS_ConvertUTF16toUTF8(serviceUuid).get());
+  BT_API2_LOGR("instance id = %d", aServiceId.mId.mInstanceId);
+
+  nsString charUuid;
+  UuidToString(aCharId.mUuid, charUuid);
+  BT_API2_LOGR("char uuid = %s", NS_ConvertUTF16toUTF8(charUuid).get());
+
+  nsString descriptorUuid;
+  UuidToString(aDescriptorId.mUuid, descriptorUuid);
+  BT_API2_LOGR("desc uuid = %s", NS_ConvertUTF16toUTF8(descriptorUuid).get());
+
+  InfallibleTArray<BluetoothNamedValue> values;
+  BT_APPEND_NAMED_VALUE(values, "serviceUuid", serviceUuid);
+  BT_APPEND_NAMED_VALUE(values, "serviceInstanceId",
+                        (uint32_t)aServiceId.mId.mInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "charUuid", charUuid);
+  BT_APPEND_NAMED_VALUE(values, "charInstanceId",
+                        (uint32_t)aCharId.mInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "descriptorUuid", descriptorUuid);
+  BT_APPEND_NAMED_VALUE(values, "descriptorInstanceId",
+                        (uint32_t)aDescriptorId.mInstanceId);
+
+  BluetoothSignal signal(NS_LITERAL_STRING("GetDescriptor"),
+                         sClients[clientIndex].mAppUuid, values);
+  bs->DistributeSignal(signal);
+}
 
 void
 BluetoothGattManager::GetIncludedServiceNotification(

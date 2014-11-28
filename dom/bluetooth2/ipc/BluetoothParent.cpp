@@ -260,6 +260,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
     case Request::TGetCharacteristicRequest:
       return actor->DoRequest(aRequest.get_GetCharacteristicRequest());
+    case Request::TGetDescriptorRequest:
+      return actor->DoRequest(aRequest.get_GetDescriptorRequest());
     case Request::TStartNotificationsRequest:
       return actor->DoRequest(aRequest.get_StartNotificationsRequest());
     default:
@@ -761,6 +763,25 @@ BluetoothRequestParent::DoRequest(const GetCharacteristicRequest& aRequest)
                                       aRequest.characteristicUuid(),
                                       aRequest.characteristicInstanceId(),
                                       mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const GetDescriptorRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGetDescriptorRequest);
+
+  mService->GetDescriptorInternal(aRequest.connId(),
+                                  aRequest.serviceUuid(),
+                                  aRequest.serviceInstanceId(),
+                                  aRequest.isPrimary(),
+                                  aRequest.characteristicUuid(),
+                                  aRequest.characteristicInstanceId(),
+                                  aRequest.descriptorUuid(),
+                                  aRequest.descriptorInstanceId(),
+                                  mReplyRunnable.get());
 
   return true;
 }

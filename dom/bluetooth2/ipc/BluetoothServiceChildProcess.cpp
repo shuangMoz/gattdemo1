@@ -427,6 +427,23 @@ BluetoothServiceChildProcess::GetCharacteristicInternal(
 }
 
 void
+BluetoothServiceChildProcess::GetDescriptorInternal(
+  int aConnId, const nsAString& aServiceUuid,
+  int aServiceInstanceId, bool aIsPrimary,
+  const nsAString& aCharacteristicUuid, int aCharacteristicInstanceId,
+  const nsAString& aDescriptorUuid, int aDescriptorInstanceId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GetDescriptorRequest(aConnId, nsString(aServiceUuid),
+                         aServiceInstanceId, aIsPrimary,
+                         nsString(aCharacteristicUuid),
+                         aCharacteristicInstanceId,
+                         nsString(aDescriptorUuid),
+                         aDescriptorInstanceId));
+}
+
+void
 BluetoothServiceChildProcess::StartNotificationsInternal(
   int aClientIf, const nsAString& aDeviceAddr,
   const nsAString& aServiceUuid, int aServiceInstanceId, bool aIsPrimary,

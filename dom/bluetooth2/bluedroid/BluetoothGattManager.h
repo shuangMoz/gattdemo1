@@ -49,6 +49,16 @@ public:
                          int aCharacteristicInstanceId,
                          BluetoothReplyRunnable* aRunnable);
 
+  void GetDescriptor(int aConnId,
+                     const nsAString& aServiceUuid,
+                     int aServiceInstanceId,
+                     bool aIsPrimary,
+                     const nsAString& aCharacteristicUuid,
+                     int aCharacteristicInstanceId,
+                     const nsAString& aDescriptorUuid,
+                     int aDescriptorInstanceId,
+                     BluetoothReplyRunnable* aRunnable);
+
   void StartNotifications(int aClientIf,
                           const nsAString& aDeviceAddr,
                           const nsAString& aServiceUuid,

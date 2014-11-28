@@ -724,6 +724,13 @@ BluetoothGattClientHALInterface::GetDescriptor(
   btgatt_gatt_id_t descriptorId;
 
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
+      NS_SUCCEEDED(Convert(aCharId, charId))) {
+    status = mInterface->get_descriptor(aConnId, &serviceId, &charId, 0);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+/*
+  if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
       NS_SUCCEEDED(Convert(aCharId, charId)) &&
       NS_SUCCEEDED(Convert(aDescriptorId, descriptorId))) {
     status = mInterface->get_descriptor(aConnId, &serviceId, &charId,
@@ -731,6 +738,7 @@ BluetoothGattClientHALInterface::GetDescriptor(
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
+*/
 #else
   status = BT_STATUS_UNSUPPORTED;
 #endif
