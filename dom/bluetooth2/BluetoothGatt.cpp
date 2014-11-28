@@ -320,6 +320,31 @@ BluetoothGatt::HandleGetCharacteristic(const BluetoothValue& aValue)
 }
 
 void
+BluetoothGatt::HandleCharacteristicChanged(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& values =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(values.Length() == 5 &&
+             values[0].value().type() == BluetoothValue::TnsString &&
+             values[1].value().type() == BluetoothValue::Tuint32_t &&
+             values[2].value().type() == BluetoothValue::TnsString &&
+             values[3].value().type() == BluetoothValue::Tuint32_t &&
+             values[4].value().type() == BluetoothValue::TArrayOfuint8_t);
+
+  nsString serviceUuid = values[0].value().get_nsString();
+  int serviceInstanceId = values[1].value().get_uint32_t();
+  nsString charUuid = values[2].value().get_nsString();
+  int charInstanceId = values[3].value().get_uint32_t();
+  const InfallibleTArray<uint8_t>& charValue =
+    values[4].value().get_ArrayOfuint8_t();
+
+  // TODO: Report value to applications
+}
+
+void
 BluetoothGatt::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -340,6 +365,8 @@ BluetoothGatt::Notify(const BluetoothSignal& aData)
     HandleSearchCompleted();
   } else if (aData.name().EqualsLiteral("GetCharacteristic")) {
     HandleGetCharacteristic(v);
+  } else if (aData.name().EqualsLiteral("CharacteristicChanged")) {
+    HandleCharacteristicChanged(v);
   } else {
     BT_WARNING("Not handling device signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());

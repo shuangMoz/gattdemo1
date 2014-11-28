@@ -389,15 +389,10 @@ class DisconnectResultHandler MOZ_FINAL
   : public BluetoothGattClientResultHandler
 {
 public:
-  DisconnectResultHandler(BluetoothReplyRunnable* aReply)
-  : mReply(aReply)
-  { }
   void OnError(BluetoothStatus status) MOZ_FINAL
   {
     // log and reply status error
   }
-private:
-  nsRefPtr<BluetoothReplyRunnable> mReply;
 };
 
 void
@@ -405,6 +400,7 @@ BluetoothGattManager::Disconnect(int aClientIf,
                                  const nsAString& aDeviceAddr,
                                  BluetoothReplyRunnable* aRunnable)
 {
+  BT_API2_LOGR("gattMgr::Disconnect()");
   MOZ_ASSERT(NS_IsMainThread());
   ENSURE_GATT_CLIENT_IF_IS_READY_VOID(aRunnable);
 
@@ -418,7 +414,7 @@ BluetoothGattManager::Disconnect(int aClientIf,
 
   sBluetoothGattClientInterface->Disconnect(
     aClientIf, aDeviceAddr, sClients[clientIndex].mConnId,
-    new DisconnectResultHandler(aRunnable));
+    new DisconnectResultHandler());
 }
 
 class GetCharacteristicResultHandler MOZ_FINAL
@@ -641,7 +637,7 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
                                              int aClientIf,
                                              const nsAString& aDeviceAddr)
 {
-  BT_API2_LOGR("connId %d is disconnected");
+  BT_API2_LOGR("connId %d is disconnected", aConnId);
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothService* bs = BluetoothService::Get();
@@ -729,7 +725,7 @@ BluetoothGattManager::GetCharacteristicNotification(
   const BluetoothGattId& aCharId,
   int aCharProperty)
 {
-  BT_API2_LOGR();
+  BT_API2_LOGR("connId = %d", aConnId);
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
@@ -787,7 +783,14 @@ BluetoothGattManager::RegisterNotificationNotification(
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
-  // int clientIndex = GetClientIndexByConnId(aConnId);
+  /**
+   * aConnId reported by bluedroid cannot be mapped to existing clients now
+   * Workaround here to ignore this. (Only for Demo)
+   *
+   * TODO: fix this
+   */
+   // int clientIndex = GetClientIndexByConnId(aConnId);
+   int clientIndex = 0;
 
   // if (aStatus != 0 || clientIndex < 0) {
   if (aStatus != 0) {
@@ -813,6 +816,37 @@ BluetoothGattManager::NotifyNotification(
   int aConnId, const BluetoothGattNotifyParam& aNotifyParam)
 {
   BT_API2_LOGR("connId = %d", aConnId);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  int clientIndex = GetClientIndexByConnId(aConnId);
+  NS_ENSURE_TRUE_VOID(clientIndex >= 0);
+
+  // service uuid, instanceid
+  nsString serviceUuid;
+  UuidToString(aNotifyParam.mServiceId.mId.mUuid, serviceUuid);
+  int serviceInstanceId = aNotifyParam.mServiceId.mId.mInstanceId;
+
+  // char uuid, instanceid, value
+  nsString charUuid;
+  UuidToString(aNotifyParam.mCharId.mUuid, charUuid);
+  int charInstanceId = aNotifyParam.mCharId.mInstanceId;
+  uint8_t charValue[BLUETOOTH_GATT_MAX_ATTR_LEN];
+  memcpy(charValue, aNotifyParam.mValue, BLUETOOTH_GATT_MAX_ATTR_LEN);
+
+  InfallibleTArray<BluetoothNamedValue> values;
+  BT_APPEND_NAMED_VALUE(values, "serviceUuid", serviceUuid);
+  BT_APPEND_NAMED_VALUE(
+    values, "serviceInstanceId", (uint32_t)serviceInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "charUuid", charUuid);
+  BT_APPEND_NAMED_VALUE(values, "charInstanceId", (uint32_t)charInstanceId);
+  BT_APPEND_NAMED_VALUE(values, "charValue", charValue);
+
+  BluetoothSignal signal(NS_LITERAL_STRING("CharacteristicChanged"),
+                         sClients[clientIndex].mAppUuid, values);
+  bs->DistributeSignal(signal);
 }
 
 void

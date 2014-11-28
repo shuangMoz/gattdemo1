@@ -52,6 +52,7 @@ public:
    * Event Handlers
    ***************************************************************************/
   IMPL_EVENT_HANDLER(connectionstatechanged);
+  IMPL_EVENT_HANDLER(characteristicchanged);
 
   /****************************************************************************
    * Methods (Web API Implementation)
@@ -112,6 +113,7 @@ private:
   void HandleServiceDiscovered(const BluetoothValue& aValue);
   void HandleSearchCompleted();
   void HandleGetCharacteristic(const BluetoothValue& aValue);
+  void HandleCharacteristicChanged(const BluetoothValue& aValue);
 
   /****************************************************************************
    * Variables
