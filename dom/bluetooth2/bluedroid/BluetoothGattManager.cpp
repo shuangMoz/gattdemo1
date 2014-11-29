@@ -515,6 +515,53 @@ BluetoothGattManager::GetDescriptor(int aConnId,
     new GetDescriptorResultHandler());
 }
 
+void
+BluetoothGattManager::WriteDescriptor(int aConnId,
+                                    const nsAString& aServiceUuid,
+                                    int aServiceInstanceId,
+                                    bool aIsPrimary,
+                                    const nsAString& aCharacteristicUuid,
+                                    int aCharacteristicInstanceId,
+                                    const nsAString& aDescriptorUuid,
+                                    int aDescriptorInstanceId,
+                                    int aWriteType,
+                                    int aLen,
+                                    int aAuthType,
+                                    nsCString& aValue,
+                                    BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_GATT_CLIENT_IF_IS_READY_VOID(aRunnable);
+
+  // build service id
+  BluetoothGattId gattId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aServiceUuid).get(), gattId.mUuid);
+  gattId.mInstanceId = aServiceInstanceId;
+
+  BluetoothGattServiceId serviceId;
+  memcpy(&serviceId.mId, &gattId, sizeof(BluetoothGattId));
+  //serviceId.mId = gattId;
+  serviceId.mIsPrimary = aIsPrimary;
+
+  // build characteristic
+  BluetoothGattId characteristicId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aCharacteristicUuid).get(),
+               characteristicId.mUuid);
+  characteristicId.mInstanceId = aCharacteristicInstanceId;
+
+  // build descriptor
+  BluetoothGattId descriptorId;
+  StringToUuid(NS_ConvertUTF16toUTF8(aDescriptorUuid).get(),
+               descriptorId.mUuid);
+  descriptorId.mInstanceId = aDescriptorInstanceId;
+
+  sBluetoothGattClientInterface->WriteDescriptor(
+    aConnId, serviceId, characteristicId, descriptorId, aWriteType, aLen, aAuthType, aValue,
+    new GetDescriptorResultHandler());
+}
+
 class StartNotificationsResultHandler MOZ_FINAL
   : public BluetoothGattClientResultHandler
 {

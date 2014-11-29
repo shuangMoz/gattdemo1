@@ -207,6 +207,21 @@ public:
                              int aCharacteristicInstanceId,
                              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual void
+  WriteDescriptorInternal(int aConnId,
+                          const nsAString& aServiceUuid,
+                          int aServiceInstanceId,
+                          bool aIsPrimary,
+                          const nsAString& aCharacteristicUuid,
+                          int aCharacteristicInstanceId,
+                          const nsAString& aDescriptorUuid,
+                          int aDescriptorInstanceId,
+                          int aWriteType,
+                          int aLen,
+                          int aAuthReq,
+                          nsCString& aValue,
+                          BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
   //
   // Bluetooth notifications
   //

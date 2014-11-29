@@ -262,6 +262,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_GetCharacteristicRequest());
     case Request::TGetDescriptorRequest:
       return actor->DoRequest(aRequest.get_GetDescriptorRequest());
+    case Request::TWriteDescriptorRequest:
+      return actor->DoRequest(aRequest.get_WriteDescriptorRequest());
     case Request::TStartNotificationsRequest:
       return actor->DoRequest(aRequest.get_StartNotificationsRequest());
     default:
@@ -782,6 +784,29 @@ BluetoothRequestParent::DoRequest(const GetDescriptorRequest& aRequest)
                                   aRequest.descriptorUuid(),
                                   aRequest.descriptorInstanceId(),
                                   mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const WriteDescriptorRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TWriteDescriptorRequest);
+  nsCString data = aRequest.value();
+  mService->WriteDescriptorInternal(aRequest.connId(),
+                                    aRequest.serviceUuid(),
+                                    aRequest.serviceInstanceId(),
+                                    aRequest.isPrimary(),
+                                    aRequest.characteristicUuid(),
+                                    aRequest.characteristicInstanceId(),
+                                    aRequest.descriptorUuid(),
+                                    aRequest.descriptorInstanceId(),
+                                    aRequest.writeType(),
+                                    aRequest.len(),
+                                    aRequest.authType(),
+                                    data,
+                                    mReplyRunnable.get());
 
   return true;
 }

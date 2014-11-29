@@ -236,6 +236,9 @@ protected:
   DoRequest(const GetDescriptorRequest& aRequest);
 
   bool
+  DoRequest(const WriteDescriptorRequest& aRequest);
+
+  bool
   DoRequest(const StartNotificationsRequest& aRequest);
 };
 

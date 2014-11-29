@@ -850,7 +850,7 @@ BluetoothGattClientHALInterface::WriteDescriptor(
   const BluetoothGattId& aCharId,
   const BluetoothGattId& aDescriptorId,
   int aWriteType, int aLen, int aAuthReq,
-  const ArrayBuffer& aValue,
+  nsCString& aValue,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
@@ -862,11 +862,10 @@ BluetoothGattClientHALInterface::WriteDescriptor(
 
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
       NS_SUCCEEDED(Convert(aCharId, charId)) &&
-      NS_SUCCEEDED(Convert(aDescriptorId, descriptorId)) &&
-      NS_SUCCEEDED(Convert(aValue, value))) {
+      NS_SUCCEEDED(Convert(aDescriptorId, descriptorId))) {
     status = mInterface->write_descriptor(aConnId, &serviceId, &charId,
                                           &descriptorId, aWriteType, aLen,
-                                          aAuthReq, value);
+                                          aAuthReq, const_cast<char*>(aValue.get()));
   } else {
     status = BT_STATUS_PARM_INVALID;
   }

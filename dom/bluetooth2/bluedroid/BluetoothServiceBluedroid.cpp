@@ -27,6 +27,7 @@
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -1351,6 +1352,35 @@ BluetoothServiceBluedroid::StartNotificationsInternal(
     aClientIf, aDeviceAddr, aServiceUuid,
     aServiceInstanceId, aIsPrimary, aCharacteristicUuid,
     aCharacteristicInstanceId, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::WriteDescriptorInternal(int aConnId,
+  const nsAString& aServiceUuid,
+  int aServiceInstanceId,
+  bool aIsPrimary,
+  const nsAString& aCharacteristicUuid,
+  int aCharacteristicInstanceId,
+  const nsAString& aDescriptorUuid,
+  int aDescriptorInstanceId,
+  int aWriteType,
+  int aLen,
+  int aAuthType,
+  nsCString& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->WriteDescriptor(
+    aConnId, aServiceUuid, aServiceInstanceId, aIsPrimary,
+    aCharacteristicUuid, aCharacteristicInstanceId,
+    aDescriptorUuid, aDescriptorInstanceId, aWriteType, aLen, aAuthType, aValue, aRunnable);
 }
 
 //

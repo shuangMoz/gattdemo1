@@ -15,6 +15,7 @@
 #include "nsIObserver.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/TypedArray.h"
 
 class nsIDOMBlob;
 
@@ -375,6 +376,24 @@ public:
                              const nsAString& aCharacteristicUuid,
                              int aCharacteristicInstanceId,
                              BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Write Value of Descriptor
+   */
+  virtual void
+  WriteDescriptorInternal(int aConnId,
+                          const nsAString& aServiceUuid,
+                          int aServiceInstanceId,
+                          bool aIsPrimary,
+                          const nsAString& aCharacteristicUuid,
+                          int aCharacteristicInstanceId,
+                          const nsAString& aDescriptorUuid,
+                          int aDescriptorInstanceId,
+                          int aWriteType,
+                          int aLen,
+                          int aAuthReq,
+                          nsCString& aData,
+                          BluetoothReplyRunnable* aRunnable) = 0;
 
   bool
   IsEnabled() const

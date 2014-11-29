@@ -221,6 +221,22 @@ struct GetDescriptorRequest
   int descriptorInstanceId;
 };
 
+struct WriteDescriptorRequest
+{
+  int connId;
+  nsString serviceUuid;
+  int serviceInstanceId;
+  bool isPrimary;
+  nsString characteristicUuid;
+  int characteristicInstanceId;
+  nsString descriptorUuid;
+  int descriptorInstanceId;
+  int writeType;
+  int len;
+  int authType;
+  nsCString value;
+};
+
 struct StartNotificationsRequest
 {
   int clientIf;
@@ -270,6 +286,7 @@ union Request
   DisconnectGattClientRequest;
   GetCharacteristicRequest;
   GetDescriptorRequest;
+  WriteDescriptorRequest;
   StartNotificationsRequest;
 };
 

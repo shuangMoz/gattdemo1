@@ -735,7 +735,7 @@ public:
                                int aWriteType,
                                int aLen,
                                int aAuthReq,
-                               const ArrayBuffer& aValue,
+                               nsCString& aValue,
                                BluetoothGattClientResultHandler* aRes) = 0;
 
   /* Execute / Abort Prepared Write*/

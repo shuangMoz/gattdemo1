@@ -145,11 +145,19 @@ BluetoothGattDescriptor::WriteValue(const ArrayBuffer& aValue, ErrorResult& aRv)
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
                                    promise,
                                    NS_LITERAL_STRING("WriteDescriptor"));
-/*
+
+  int authType = 0; // AUTHENTICATION_NONE
+  int writeType = 0x02; // WRITE_TYPE_DEFAULT
+  int len = aValue.Length();
+  nsCString a = nsCString(reinterpret_cast<const char*>(aValue.Data()));
+  BT_API2_LOGR("array length: %d", len);
+  /*TODO: Handle WriteType */
   bs->WriteDescriptorInternal(mConnId,
                               mServiceUuid, mServiceInstanceId, mIsPrimary,
                               mCharUuid, mCharInstanceId,
-                              mUuid, mInstanceId, aValue, result);
-*/
+                              mUuid, mInstanceId, writeType, len, authType,
+                              a,
+                              result);
+
   return promise.forget();
 }
