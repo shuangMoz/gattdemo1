@@ -13,8 +13,8 @@
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothGattBinding.h"
+#include "mozilla/dom/BluetoothGattCharacteristicEvent.h"
 #include "mozilla/dom/Promise.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -238,6 +238,21 @@ BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
 }
 
 void
+BluetoothGatt::UpdateCharacteristChanged(BluetoothGattCharacteristic* aChar)
+{
+  BT_API2_LOGR();
+
+  BluetoothGattCharacteristicEventInit init;
+  init.mCharacteristic = aChar;
+
+  nsRefPtr<BluetoothGattCharacteristicEvent> event =
+    BluetoothGattCharacteristicEvent::Constructor(this,
+      NS_LITERAL_STRING("characteristicchanged"), init);
+
+  DispatchTrustedEvent(event);
+}
+
+void
 BluetoothGatt::HandleClientRegistered(const BluetoothValue& aValue)
 {
   MOZ_ASSERT(aValue.type() == BluetoothValue::Tuint32_t);
@@ -375,6 +390,7 @@ BluetoothGatt::HandleCharacteristicChanged(const BluetoothValue& aValue)
 {
   MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
 
+  BT_API2_LOGR();
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
 
@@ -392,7 +408,21 @@ BluetoothGatt::HandleCharacteristicChanged(const BluetoothValue& aValue)
   const InfallibleTArray<uint8_t>& charValue =
     values[4].value().get_ArrayOfuint8_t();
 
-  // TODO: Report value to applications
+  BT_API2_LOGR("ServiceUUID:%s", NS_ConvertUTF16toUTF8(serviceUuid).get());
+  BT_API2_LOGR("CharUUID:%s", NS_ConvertUTF16toUTF8(charUuid).get());
+  for (uint32_t i = 0; i < mServices.Length(); i++) {
+    nsString uuid;
+    mServices[i]->GetUuid(uuid);
+
+    if (uuid.Equals(serviceUuid) &&
+        mServices[i]->InstanceId() == serviceInstanceId) {
+      nsRefPtr<BluetoothGattCharacteristic> characteristic
+        = mServices[i]->FindCharacteristic(charUuid, charInstanceId);
+      NS_ENSURE_TRUE_VOID(characteristic);
+      BT_API2_LOGR("Found match characteristic");
+      UpdateCharacteristChanged(characteristic);
+    }
+  }
 }
 
 void

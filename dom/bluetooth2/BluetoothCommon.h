@@ -186,6 +186,12 @@ extern bool gBluetoothDebugFlag;
  */
 #define GATT_CONNECTION_STATUS_CHANGED_ID    "connectionstatechanged"
 
+/**
+ * When a remote BLE device gets characteristic changed event, we'll dispatch an
+ * event
+ */
+#define GATT_CHAR_CHANGED_ID    "characteristicchanged"
+
 // Bluetooth address format: xx:xx:xx:xx:xx:xx (or xx_xx_xx_xx_xx_xx)
 #define BLUETOOTH_ADDRESS_LENGTH 17
 #define BLUETOOTH_ADDRESS_NONE   "00:00:00:00:00:00"

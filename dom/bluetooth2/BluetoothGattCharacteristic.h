@@ -80,7 +80,7 @@ public:
   void AppendDescriptor(const nsAString& aUuid,
                         int aInstanceId,
                         int aConnId);
-
+  void UpdateCharacteristic(nsTArray<uint8_t> aValue);
 private:
   BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
                               const nsAString& aUuid,

@@ -5,10 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothGattCharacteristic.h"
+#include "BluetoothGatt.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothGattCharacteristicBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -165,4 +167,27 @@ BluetoothGattCharacteristic::AppendDescriptor(const nsAString& aUuid,
   NS_ENSURE_TRUE_VOID(descriptor);
 
   mDescriptors.AppendElement(descriptor);
+}
+
+/* TODO: Update Gatt Cache valuie */
+void
+BluetoothGattCharacteristic::UpdateCharacteristic(nsTArray<uint8_t> aValue)
+{
+  /*
+  mRawValue = aValue;
+  AutoJSAPI jsapi;
+
+  if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> arrayBuf(cx, ArrayBuffer::Create(cx, aValue.Length(), aValue));
+
+  if (NS_WARN_IF(!arrayBuf)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mValue = JS::Rooted<JS::Value> jsData(cx, JS::ObjectValue(*arrayBuf));
+*/
 }

@@ -97,6 +97,13 @@ private:
   void UpdateConnectionState(BluetoothConnectionState aState);
 
   /**
+   * fire characteristicchanged event to the application.
+   *
+   * @param
+   */
+  void UpdateCharacteristChanged(BluetoothGattCharacteristic* aChar);
+
+  /**
    * Unregister the gatt client from bluetooth stack.
    */
   void UnregisterClient();
