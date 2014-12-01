@@ -46,7 +46,10 @@ public:
 
   void GetValue(JSContext* cx,
                 JS::MutableHandle<JSObject*> aValue,
-                ErrorResult& aRv) { }
+                ErrorResult& aRv) {
+    BT_API2_LOGR();
+    aValue.set(mValue);
+  }
 
   void GetDescriptors(
     nsTArray<nsRefPtr<BluetoothGattDescriptor>>& aDescriptors) const
@@ -80,7 +83,7 @@ public:
   void AppendDescriptor(const nsAString& aUuid,
                         int aInstanceId,
                         int aConnId);
-  void UpdateCharacteristic(nsTArray<uint8_t> aValue);
+  void UpdateCharacteristic(const nsTArray<uint8_t>& aValue);
 private:
   BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
                               const nsAString& aUuid,

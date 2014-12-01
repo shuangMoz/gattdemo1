@@ -969,8 +969,14 @@ BluetoothGattManager::NotifyNotification(
   nsString charUuid;
   UuidToString(aNotifyParam.mCharId.mUuid, charUuid);
   int charInstanceId = aNotifyParam.mCharId.mInstanceId;
-  uint8_t charValue[BLUETOOTH_GATT_MAX_ATTR_LEN];
-  memcpy(charValue, aNotifyParam.mValue, BLUETOOTH_GATT_MAX_ATTR_LEN);
+  // TODO: more validation, and free charValue
+  uint8_t charValue[aNotifyParam.mLength];
+  memcpy(charValue, aNotifyParam.mValue, aNotifyParam.mLength);
+  InfallibleTArray<uint8_t> arrayOfCharValue;
+
+  for (uint32_t i = 0; i<aNotifyParam.mLength; ++i) {
+    arrayOfCharValue.AppendElement(charValue[i]);
+  }
 
   InfallibleTArray<BluetoothNamedValue> values;
   BT_APPEND_NAMED_VALUE(values, "serviceUuid", serviceUuid);
@@ -978,7 +984,7 @@ BluetoothGattManager::NotifyNotification(
     values, "serviceInstanceId", (uint32_t)serviceInstanceId);
   BT_APPEND_NAMED_VALUE(values, "charUuid", charUuid);
   BT_APPEND_NAMED_VALUE(values, "charInstanceId", (uint32_t)charInstanceId);
-  BT_APPEND_NAMED_VALUE(values, "charValue", charValue);
+  BT_APPEND_NAMED_VALUE(values, "charValue", arrayOfCharValue);
 
   BluetoothSignal signal(NS_LITERAL_STRING("CharacteristicChanged"),
                          sClients[clientIndex].mAppUuid, values);

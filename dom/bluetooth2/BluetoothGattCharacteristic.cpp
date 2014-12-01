@@ -171,23 +171,15 @@ BluetoothGattCharacteristic::AppendDescriptor(const nsAString& aUuid,
 
 /* TODO: Update Gatt Cache valuie */
 void
-BluetoothGattCharacteristic::UpdateCharacteristic(nsTArray<uint8_t> aValue)
+BluetoothGattCharacteristic::UpdateCharacteristic(const nsTArray<uint8_t>& aValue)
 {
-  /*
   mRawValue = aValue;
   AutoJSAPI jsapi;
 
-  if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.Init(GetParentObject()))) {
     return;
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> arrayBuf(cx, ArrayBuffer::Create(cx, aValue.Length(), aValue));
-
-  if (NS_WARN_IF(!arrayBuf)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mValue = JS::Rooted<JS::Value> jsData(cx, JS::ObjectValue(*arrayBuf));
-*/
+  mValue = ArrayBuffer::Create(cx, mRawValue.Length(), mRawValue.Elements());
 }

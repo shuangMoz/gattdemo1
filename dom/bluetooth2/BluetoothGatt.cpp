@@ -410,6 +410,7 @@ BluetoothGatt::HandleCharacteristicChanged(const BluetoothValue& aValue)
 
   BT_API2_LOGR("ServiceUUID:%s", NS_ConvertUTF16toUTF8(serviceUuid).get());
   BT_API2_LOGR("CharUUID:%s", NS_ConvertUTF16toUTF8(charUuid).get());
+
   for (uint32_t i = 0; i < mServices.Length(); i++) {
     nsString uuid;
     mServices[i]->GetUuid(uuid);
@@ -420,6 +421,8 @@ BluetoothGatt::HandleCharacteristicChanged(const BluetoothValue& aValue)
         = mServices[i]->FindCharacteristic(charUuid, charInstanceId);
       NS_ENSURE_TRUE_VOID(characteristic);
       BT_API2_LOGR("Found match characteristic");
+      BT_API2_LOGR("refresh value");
+      characteristic->UpdateCharacteristic(charValue);
       UpdateCharacteristChanged(characteristic);
     }
   }
